@@ -4,7 +4,10 @@ inputs:
   paths: 
     description: 'the paths that you want to check for'
     required: true
-    default: '[process]'
+inputs:
+  github-token: 
+    description: 'github auth token'
+    required: true
 outputs:
   hasChanges:
     description: 'A boolean indicating whether the paths have changes'
