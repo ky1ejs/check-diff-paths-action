@@ -29880,6 +29880,8 @@ async function run() {
         files = await getCommitFileNames(octokit, repo, context.ref);
     }
     const pathsChanged = files.some(f => regexes.some(r => r.test(f)));
+    core.info(`Evaluating ${files.length} changed file(s).`);
+    core.info(`Has changes: ${pathsChanged}`);
     core.setOutput('has-changes', pathsChanged);
 }
 exports.run = run;
