@@ -1,9 +1,10 @@
+# `check-diff-paths-action`
+
 [![GitHub Super-Linter](https://github.com/ky1ejs/check-diff-paths-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/ky1ejs/check-diff-paths-action/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/ky1ejs/check-diff-paths-action/actions/workflows/ci.yml/badge.svg)`
 
-# What is this?
-
-`check-diff-paths-action` allows you apply regex to the list of files that changed in the current PR and get a boolean back if any of them returned true.
+`check-diff-paths-action` allows you apply regex to the list of files that 
+changed in the current PR and get a boolean back if any of them returned true.
 
 It's a solution to [this problem](https://github.com/orgs/community/discussions/26857).
 
