@@ -9,6 +9,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as main from '../src/main'
+// eslint-disable-next-line import/no-unresolved
 import { components } from '@octokit/openapi-types'
 
 // Mock the GitHub Actions core library
@@ -16,7 +17,7 @@ const getInputMock = jest.spyOn(core, 'getInput')
 const setOutputMock = jest.spyOn(core, 'setOutput')
 
 // Shallow clone original @actions/github context
-let originalContext = { ...github.context }
+const originalContext = { ...github.context }
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -43,7 +44,7 @@ describe('action', () => {
     }
 
     const oktokit = github.getOctokit('some-token')
-    jest.spyOn(oktokit.rest.pulls, 'listFiles').mockImplementation(() => {
+    jest.spyOn(oktokit.rest.pulls, 'listFiles').mockImplementation(async () => {
       return Promise.resolve({
         headers: {},
         status: 200,
@@ -69,7 +70,7 @@ describe('action', () => {
     jest.restoreAllMocks()
   })
 
-  it('returns true when a file has a diff', async () => {
+  it('returns true when a matching path is present', async () => {
     // Set the action's inputs as return values from core.getInput()
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {
@@ -89,7 +90,7 @@ describe('action', () => {
     expect(setOutputMock).toHaveBeenCalledWith('paths-changed', true)
   })
 
-  it('returns true when a file has a diff', async () => {
+  it('returns false when a matching path is not present', async () => {
     // Set the action's inputs as return values from core.getInput()
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {

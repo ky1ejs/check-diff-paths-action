@@ -12,7 +12,12 @@ export async function run(): Promise<void> {
   const ghToken = core.getInput('github-token')
   const octokit = github.getOctokit(ghToken)
   const context = github.context
-  const repo = context.payload.repository!
+  const repo = context.payload.repository
+
+  if (!repo) {
+    core.setFailed('Could not get repository from context, exiting')
+    return
+  }
 
   const result = await octokit.rest.pulls.listFiles({
     owner: repo.owner.login,

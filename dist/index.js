@@ -29862,11 +29862,15 @@ const github = __importStar(__nccwpck_require__(5438));
  */
 async function run() {
     const pathsInput = core.getInput('paths', { required: true });
-    const paths = parseArrayInput(pathsInput);
+    const regexes = parseArrayInput(pathsInput).map(e => new RegExp(e));
     const ghToken = core.getInput('github-token');
     const octokit = github.getOctokit(ghToken);
     const context = github.context;
     const repo = context.payload.repository;
+    if (!repo) {
+        core.setFailed('Could not get repository from context, exiting');
+        return;
+    }
     const result = await octokit.rest.pulls.listFiles({
         owner: repo.owner.login,
         repo: repo.name,
@@ -29875,7 +29879,7 @@ async function run() {
     });
     const pathsChanged = result.data
         .map(f => f.filename)
-        .some(e => paths.includes(e));
+        .some(f => regexes.some(r => r.test(f)));
     core.setOutput('paths-changed', pathsChanged);
 }
 exports.run = run;
