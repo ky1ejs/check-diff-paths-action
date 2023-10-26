@@ -19,10 +19,15 @@ export async function run(): Promise<void> {
     return
   }
 
+  if (!context.payload.pull_request) {
+    core.setFailed('PR number not provided')
+    return
+  }
+
   const result = await octokit.rest.pulls.listFiles({
     owner: repo.owner.login,
     repo: repo.name,
-    pull_number: context.payload.number,
+    pull_number: context.payload.pull_request.number,
     per_page: 100
   })
 

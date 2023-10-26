@@ -36,6 +36,9 @@ describe('action', () => {
 
     github.context.ref = 'refs/heads/some-ref'
     github.context.sha = '1234567890123456789012345678901234567890'
+    github.context.payload.pull_request = {
+      number: 1
+    }
     github.context.payload.repository = {
       name: 'some-repo',
       owner: {
