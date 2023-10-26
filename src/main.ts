@@ -30,6 +30,8 @@ export async function run(): Promise<void> {
     files = await getCommitFileNames(octokit, repo, context.ref)
   }
 
+  core.notice(`Evaluating ${files.length} changed file(s).`)
+
   const pathsChanged = files.some(f => regexes.some(r => r.test(f)))
   core.setOutput('has-changes', pathsChanged)
 }
