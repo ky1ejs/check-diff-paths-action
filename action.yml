@@ -8,7 +8,7 @@ inputs:
     description: 'github auth token'
     required: true
 outputs:
-  hasChanges:
+  has-changes:
     description: 'A boolean indicating whether the paths have changes'
 runs:
   using: 'node20'

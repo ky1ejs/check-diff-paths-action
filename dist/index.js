@@ -29880,7 +29880,7 @@ async function run() {
     const pathsChanged = result.data
         .map(f => f.filename)
         .some(f => regexes.some(r => r.test(f)));
-    core.setOutput('paths-changed', pathsChanged);
+    core.setOutput('has-changes', pathsChanged);
 }
 exports.run = run;
 /**

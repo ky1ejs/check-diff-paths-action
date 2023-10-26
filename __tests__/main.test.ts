@@ -87,7 +87,7 @@ describe('action', () => {
     expect(runMock).toHaveReturned()
 
     // Verify that all of the core library functions were called correctly
-    expect(setOutputMock).toHaveBeenCalledWith('paths-changed', true)
+    expect(setOutputMock).toHaveBeenCalledWith('has-changes', true)
   })
 
   it('returns false when a matching path is not present', async () => {
@@ -107,7 +107,7 @@ describe('action', () => {
     expect(runMock).toHaveReturned()
 
     // Verify that all of the core library functions were called correctly
-    expect(setOutputMock).toHaveBeenCalledWith('paths-changed', false)
+    expect(setOutputMock).toHaveBeenCalledWith('has-changes', false)
   })
 })
 
