@@ -1,0 +1,13 @@
+name: 'Check diff paths'
+description: 'Check which paths changed'
+inputs:
+  paths: 
+    description: 'the paths that you want to check for'
+    required: true
+    default: '[process]'
+outputs:
+  hasChanges:
+    description: 'A boolean indicating whether the paths have changes'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
