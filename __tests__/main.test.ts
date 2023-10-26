@@ -49,13 +49,15 @@ describe('action', () => {
         status: 200,
         url: 'https://api.github.com/repos/some-owner/some-repo/pulls/1/files',
         data: [
-          buildDiffedFile("folder-1/sub-folder-1/file.txt"),
-          buildDiffedFile("folder-1/sub-folder-2/file.txt"),
-          buildDiffedFile("folder-2/sub-folder-1/file.txt"),
+          buildDiffedFile('folder-1/sub-folder-1/file.txt'),
+          buildDiffedFile('folder-1/sub-folder-2/file.txt'),
+          buildDiffedFile('folder-2/sub-folder-1/file.txt')
         ]
       })
     })
-    jest.spyOn(github, 'getOctokit').mockImplementation(() => { return oktokit })
+    jest.spyOn(github, 'getOctokit').mockImplementation(() => {
+      return oktokit
+    })
   })
 
   afterAll(() => {
@@ -72,9 +74,9 @@ describe('action', () => {
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {
         case 'paths':
-          return 'folder-1/sub-folder-1/file.txt, folder-2/'
+          return 'folder-1/sub-folder-1/file.txt, folder-2/*'
         case 'github-token':
-          return "some-token"
+          return 'some-token'
         default:
           return ''
       }
@@ -84,24 +86,41 @@ describe('action', () => {
     expect(runMock).toHaveReturned()
 
     // Verify that all of the core library functions were called correctly
-    expect(setOutputMock).toHaveBeenCalledWith(
-      "paths-changed",
-      false
-    )
+    expect(setOutputMock).toHaveBeenCalledWith('paths-changed', true)
+  })
+
+  it('returns true when a file has a diff', async () => {
+    // Set the action's inputs as return values from core.getInput()
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'paths':
+          return 'folder-4/*'
+        case 'github-token':
+          return 'some-token'
+        default:
+          return ''
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Verify that all of the core library functions were called correctly
+    expect(setOutputMock).toHaveBeenCalledWith('paths-changed', false)
   })
 })
 
-function buildDiffedFile(path: string): components["schemas"]["diff-entry"] {
+function buildDiffedFile(path: string): components['schemas']['diff-entry'] {
   return {
-    sha: "1234567890123456789012345678901234567890",
+    sha: '1234567890123456789012345678901234567890',
     filename: path,
-    status: "added",
+    status: 'added',
     additions: 100,
     deletions: 100,
     changes: 100,
-    blob_url: "string",
-    raw_url: "string",
-    contents_url: "string",
+    blob_url: 'string',
+    raw_url: 'string',
+    contents_url: 'string',
     patch: undefined,
     previous_filename: undefined
   }

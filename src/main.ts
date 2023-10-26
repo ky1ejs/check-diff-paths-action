@@ -7,7 +7,8 @@ import * as github from '@actions/github'
  */
 export async function run(): Promise<void> {
   const pathsInput = core.getInput('paths', { required: true })
-  const paths = parseArrayInput(pathsInput)
+  const regexes = parseArrayInput(pathsInput).map(e => new RegExp(e))
+
   const ghToken = core.getInput('github-token')
   const octokit = github.getOctokit(ghToken)
   const context = github.context
@@ -22,7 +23,8 @@ export async function run(): Promise<void> {
 
   const pathsChanged = result.data
     .map(f => f.filename)
-    .some(e => paths.includes(e))
+    .some(f => regexes.some(r => r.test(f)))
+
   core.setOutput('paths-changed', pathsChanged)
 }
 
@@ -35,12 +37,12 @@ export async function run(): Promise<void> {
  * given.
  */
 export function parseArrayInput(input: string): string[] {
-  const paths: string[] = [];
+  const paths: string[] = []
   for (const line of input.split(/\r|\n/)) {
-    const pieces = line.split(',').map(e => e.trim());
+    const pieces = line.split(',').map(e => e.trim())
     for (const path of pieces) {
-      paths.push(path);
+      paths.push(path)
     }
   }
-  return paths;
+  return paths
 }
