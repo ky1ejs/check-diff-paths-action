@@ -1,5 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { PayloadRepository } from '@actions/github/lib/interfaces'
+import { GitHub } from '@actions/github/lib/utils'
 
 /**
  * The main function for the action.
@@ -7,9 +9,10 @@ import * as github from '@actions/github'
  */
 export async function run(): Promise<void> {
   const pathsInput = core.getInput('paths', { required: true })
+  const ghToken = core.getInput('github-token', { required: true })
+
   const regexes = parseArrayInput(pathsInput).map(e => new RegExp(e))
 
-  const ghToken = core.getInput('github-token')
   const octokit = github.getOctokit(ghToken)
   const context = github.context
   const repo = context.payload.repository
@@ -19,22 +22,15 @@ export async function run(): Promise<void> {
     return
   }
 
-  if (!context.payload.pull_request) {
-    core.setFailed('PR number not provided')
-    return
+  let files: string[]
+  const prNumber = context.payload.pull_request?.number
+  if (prNumber) {
+    files = await getPullRequestFiles(octokit, repo, prNumber)
+  } else {
+    files = await getCommitFileNames(octokit, repo, context.ref)
   }
 
-  const result = await octokit.rest.pulls.listFiles({
-    owner: repo.owner.login,
-    repo: repo.name,
-    pull_number: context.payload.pull_request.number,
-    per_page: 100
-  })
-
-  const pathsChanged = result.data
-    .map(f => f.filename)
-    .some(f => regexes.some(r => r.test(f)))
-
+  const pathsChanged = files.some(f => regexes.some(r => r.test(f)))
   core.setOutput('has-changes', pathsChanged)
 }
 
@@ -55,4 +51,38 @@ export function parseArrayInput(input: string): string[] {
     }
   }
   return paths
+}
+
+async function getCommitFileNames(
+  oktokit: InstanceType<typeof GitHub>,
+  repo: PayloadRepository,
+  ref: string
+): Promise<string[]> {
+  return await oktokit.paginate(
+    oktokit.rest.repos.getCommit,
+    {
+      owner: repo.owner.login,
+      repo: repo.name,
+      ref,
+      per_page: 100
+    },
+    response => response.data.files?.map(f => f.filename) ?? []
+  )
+}
+
+async function getPullRequestFiles(
+  oktokit: InstanceType<typeof GitHub>,
+  repo: PayloadRepository,
+  pullNumber: number
+): Promise<string[]> {
+  return await oktokit.paginate(
+    oktokit.rest.pulls.listFiles,
+    {
+      owner: repo.owner.login,
+      repo: repo.name,
+      pull_number: pullNumber,
+      per_page: 100
+    },
+    response => response.data.map(f => f.filename)
+  )
 }

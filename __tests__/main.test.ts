@@ -9,8 +9,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as main from '../src/main'
-// eslint-disable-next-line import/no-unresolved
-import { components } from '@octokit/openapi-types'
 
 // Mock the GitHub Actions core library
 const getInputMock = jest.spyOn(core, 'getInput')
@@ -47,17 +45,12 @@ describe('action', () => {
     }
 
     const oktokit = github.getOctokit('some-token')
-    jest.spyOn(oktokit.rest.pulls, 'listFiles').mockImplementation(async () => {
-      return Promise.resolve({
-        headers: {},
-        status: 200,
-        url: 'https://api.github.com/repos/some-owner/some-repo/pulls/1/files',
-        data: [
-          buildDiffedFile('folder-1/sub-folder-1/file.txt'),
-          buildDiffedFile('folder-1/sub-folder-2/file.txt'),
-          buildDiffedFile('folder-2/sub-folder-1/file.txt')
-        ]
-      })
+    jest.spyOn(oktokit, 'paginate').mockImplementation(async () => {
+      return Promise.resolve([
+        'folder-1/sub-folder-1/file.txt',
+        'folder-1/sub-folder-2/file.txt',
+        'folder-2/sub-folder-1/file.txt'
+      ])
     })
     jest.spyOn(github, 'getOctokit').mockImplementation(() => {
       return oktokit
@@ -113,19 +106,3 @@ describe('action', () => {
     expect(setOutputMock).toHaveBeenCalledWith('has-changes', false)
   })
 })
-
-function buildDiffedFile(path: string): components['schemas']['diff-entry'] {
-  return {
-    sha: '1234567890123456789012345678901234567890',
-    filename: path,
-    status: 'added',
-    additions: 100,
-    deletions: 100,
-    changes: 100,
-    blob_url: 'string',
-    raw_url: 'string',
-    contents_url: 'string',
-    patch: undefined,
-    previous_filename: undefined
-  }
-}

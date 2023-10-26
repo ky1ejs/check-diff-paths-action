@@ -29862,8 +29862,8 @@ const github = __importStar(__nccwpck_require__(5438));
  */
 async function run() {
     const pathsInput = core.getInput('paths', { required: true });
+    const ghToken = core.getInput('github-token', { required: true });
     const regexes = parseArrayInput(pathsInput).map(e => new RegExp(e));
-    const ghToken = core.getInput('github-token');
     const octokit = github.getOctokit(ghToken);
     const context = github.context;
     const repo = context.payload.repository;
@@ -29871,19 +29871,15 @@ async function run() {
         core.setFailed('Could not get repository from context, exiting');
         return;
     }
-    if (!context.payload.pull_request) {
-        core.setFailed('PR number not provided');
-        return;
+    let files;
+    const prNumber = context.payload.pull_request?.number;
+    if (prNumber) {
+        files = await getPullRequestFiles(octokit, repo, prNumber);
     }
-    const result = await octokit.rest.pulls.listFiles({
-        owner: repo.owner.login,
-        repo: repo.name,
-        pull_number: context.payload.pull_request.number,
-        per_page: 100
-    });
-    const pathsChanged = result.data
-        .map(f => f.filename)
-        .some(f => regexes.some(r => r.test(f)));
+    else {
+        files = await getCommitFileNames(octokit, repo, context.ref);
+    }
+    const pathsChanged = files.some(f => regexes.some(r => r.test(f)));
     core.setOutput('has-changes', pathsChanged);
 }
 exports.run = run;
@@ -29906,6 +29902,22 @@ function parseArrayInput(input) {
     return paths;
 }
 exports.parseArrayInput = parseArrayInput;
+async function getCommitFileNames(oktokit, repo, ref) {
+    return await oktokit.paginate(oktokit.rest.repos.getCommit, {
+        owner: repo.owner.login,
+        repo: repo.name,
+        ref,
+        per_page: 100
+    }, response => response.data.files?.map(f => f.filename) ?? []);
+}
+async function getPullRequestFiles(oktokit, repo, pullNumber) {
+    return await oktokit.paginate(oktokit.rest.pulls.listFiles, {
+        owner: repo.owner.login,
+        repo: repo.name,
+        pull_number: pullNumber,
+        per_page: 100
+    }, response => response.data.map(f => f.filename));
+}
 
 
 /***/ }),
