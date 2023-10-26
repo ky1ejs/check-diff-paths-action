@@ -3,12 +3,12 @@
 [![GitHub Super-Linter](https://github.com/ky1ejs/check-diff-paths-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/ky1ejs/check-diff-paths-action/actions/workflows/ci.yml/badge.svg)`
 
-`check-diff-paths-action` allows you apply regex to the list of files that 
-changed in the current PR and get a boolean back if any of them returned true.
+`check-diff-paths-action` allows you apply regular expressions to the list of files
+that changed in the current PR and get a boolean back if any of them returned true.f
 
 It's a solution to [this problem](https://github.com/orgs/community/discussions/26857).
 
-This repo is based on [`actions/typescript-action`](https://github.com/actions/typescript-action)
+This repository is based on [`actions/typescript-action`](https://github.com/actions/typescript-action)
 
 ## Initial Setup
 
