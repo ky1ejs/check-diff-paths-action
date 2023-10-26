@@ -4,7 +4,6 @@ inputs:
   paths: 
     description: 'the paths that you want to check for'
     required: true
-inputs:
   github-token: 
     description: 'github auth token'
     required: true
