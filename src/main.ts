@@ -41,9 +41,11 @@ export async function run(): Promise<void> {
 function runWithMapInput(input: Map<string, RegExp>, files: string[]) {
   const changedFiles = new Map<string, boolean>()
   for (const [key, value] of input) {
-    changedFiles.set(key, files.some(f => value.test(f)))
+    changedFiles.set(
+      key,
+      files.some(f => value.test(f))
+    )
   }
-
 
   for (const [key, value] of changedFiles) {
     core.info(`Evaluating ${files.length} changed file(s).`)
@@ -76,7 +78,6 @@ function parseMapInput(json: any): Map<string, RegExp> {
     map.set(key, new RegExp(json[key]))
   }
   return map
-
 }
 
 export function parseArrayInput(input: string): RegExp[] {
