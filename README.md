@@ -10,6 +10,23 @@ It's a solution to [this problem](https://github.com/orgs/community/discussions/
 
 This repository is based on [`actions/typescript-action`](https://github.com/actions/typescript-action)
 
+## Usage
+
+### JSON Input
+> [!NOTE]
+> This approach isn't ideal because it requires JSON escaping the regexes. JSON has been the only way I can find to support `Map<String, RegEx>` input. Given more time, I'll work to improve this.
+
+Make sure you JSON escape your regexes, so that this:
+```
+^ios\/.*
+```
+would become this:
+```
+^ios\\\/.*
+```
+
+You can you [this site](https://www.freeformatter.com/json-escape.html#before-output) to convert your regexes to JSON espcaped regexes (kudos to [this StackOverflow answer](https://stackoverflow.com/a/57375870/3053366) for sharing this).
+
 ## Initial Setup
 
 After you've cloned the repository to your local machine or codespace, you'll
