@@ -11,7 +11,10 @@ export async function run(): Promise<void> {
   const input = core.getInput('paths', { required: true })
   const ghToken = core.getInput('github-token', { required: true })
 
-  const inputs = parseInpuit(input)
+  core.info(`input: ${input}`)
+  const parsedInput = parseInpuit(input)
+  core.info(`parsed input: ${parsedInput}`)
+
   const octokit = github.getOctokit(ghToken)
   const context = github.context
   const repo = context.payload.repository
@@ -29,12 +32,12 @@ export async function run(): Promise<void> {
     files = await getCommitFileNames(octokit, repo, context.ref)
   }
 
-  if (inputs instanceof Map) {
+  if (parsedInput instanceof Map) {
     core.info('Using map input')
-    runWithMapInput(inputs, files)
+    runWithMapInput(parsedInput, files)
   } else {
     core.info('Using array input')
-    runWithArrayInput(inputs, files)
+    runWithArrayInput(parsedInput, files)
   }
 }
 
