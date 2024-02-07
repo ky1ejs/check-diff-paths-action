@@ -28938,7 +28938,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseArrayInput = exports.parseInpuit = exports.run = void 0;
+exports.parseArrayInput = exports.parseInput = exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 /**
@@ -28949,7 +28949,7 @@ async function run() {
     const input = core.getInput('paths', { required: true });
     const ghToken = core.getInput('github-token', { required: true });
     core.info(`input: ${input}`);
-    const parsedInput = parseInpuit(input);
+    const parsedInput = parseInput(input);
     core.info(`parsed input: ${parsedInput}`);
     const octokit = github.getOctokit(ghToken);
     const context = github.context;
@@ -28993,17 +28993,19 @@ function runWithArrayInput(input, files) {
     core.info(`Has changes: ${pathsChanged}`);
     core.setOutput('has-changes', pathsChanged);
 }
-function parseInpuit(input) {
+function parseInput(input) {
     try {
         const json = JSON.parse(input);
         return parseMapInput(json);
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     }
-    catch {
+    catch (e) {
+        core.info(`Input is not a JSON object, parsing as array. ${e.message}`);
         return parseArrayInput(input);
     }
 }
-exports.parseInpuit = parseInpuit;
-/* eslint-disable @typescript-eslint/no-explicit-any */
+exports.parseInput = parseInput;
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function parseMapInput(json) {
     const map = new Map();
     for (const key in json) {

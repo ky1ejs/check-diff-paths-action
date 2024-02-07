@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
   const ghToken = core.getInput('github-token', { required: true })
 
   core.info(`input: ${input}`)
-  const parsedInput = parseInpuit(input)
+  const parsedInput = parseInput(input)
   core.info(`parsed input: ${parsedInput}`)
 
   const octokit = github.getOctokit(ghToken)
@@ -66,16 +66,18 @@ function runWithArrayInput(input: RegExp[], files: string[]): void {
   core.setOutput('has-changes', pathsChanged)
 }
 
-export function parseInpuit(input: string): RegExp[] | Map<string, RegExp> {
+export function parseInput(input: string): RegExp[] | Map<string, RegExp> {
   try {
     const json = JSON.parse(input)
     return parseMapInput(json)
-  } catch {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  } catch (e: any) {
+    core.info(`Input is not a JSON object, parsing as array. ${e.message}`)
     return parseArrayInput(input)
   }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function parseMapInput(json: any): Map<string, RegExp> {
   const map: Map<string, RegExp> = new Map()
   for (const key in json) {
