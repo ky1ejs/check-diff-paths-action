@@ -8,11 +8,10 @@ import { GitHub } from '@actions/github/lib/utils'
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  const pathsInput = core.getInput('paths', { required: true })
+  const input = core.getInput('paths', { required: true })
   const ghToken = core.getInput('github-token', { required: true })
 
-  const regexes = parseArrayInput(pathsInput).map(e => new RegExp(e))
-
+  const inputs = parseInpuit(input)
   const octokit = github.getOctokit(ghToken)
   const context = github.context
   const repo = context.payload.repository
@@ -30,7 +29,31 @@ export async function run(): Promise<void> {
     files = await getCommitFileNames(octokit, repo, context.ref)
   }
 
-  const pathsChanged = files.some(f => regexes.some(r => r.test(f)))
+  if (inputs instanceof Map) {
+    core.info('Using map input')
+    runWithMapInput(inputs, files)
+  } else {
+    core.info('Using array input')
+    runWithArrayInput(inputs, files)
+  }
+}
+
+function runWithMapInput(input: Map<string, RegExp>, files: string[]) {
+  const changedFiles = new Map<string, boolean>()
+  for (const [key, value] of input) {
+    changedFiles.set(key, files.some(f => value.test(f)))
+  }
+
+
+  for (const [key, value] of changedFiles) {
+    core.info(`Evaluating ${files.length} changed file(s).`)
+    core.info(`${key} has changes: ${value}`)
+    core.setOutput(key, value)
+  }
+}
+
+function runWithArrayInput(input: RegExp[], files: string[]) {
+  const pathsChanged = files.some(f => input.some(r => r.test(f)))
 
   core.info(`Evaluating ${files.length} changed file(s).`)
   core.info(`Has changes: ${pathsChanged}`)
@@ -38,13 +61,31 @@ export async function run(): Promise<void> {
   core.setOutput('has-changes', pathsChanged)
 }
 
-export function parseArrayInput(input: string): string[] {
+export function parseInpuit(input: string): RegExp[] | Map<string, RegExp> {
+  try {
+    const json = JSON.parse(input)
+    return parseMapInput(input)
+  } catch {
+    return parseArrayInput(input)
+  }
+}
+
+function parseMapInput(json: any): Map<string, RegExp> {
+  const map: Map<string, RegExp> = new Map()
+  for (const key in json) {
+    map.set(key, new RegExp(json[key]))
+  }
+  return map
+
+}
+
+export function parseArrayInput(input: string): RegExp[] {
   // Inspired by answer: https://stackoverflow.com/questions/75420197/how-to-use-array-input-for-a-custom-github-actions
-  const paths: string[] = []
+  const paths: RegExp[] = []
   for (const line of input.split(/\r|\n/)) {
     const pieces = line.split(',').map(e => e.trim())
     for (const path of pieces) {
-      paths.push(path)
+      paths.push(new RegExp(path))
     }
   }
   return paths
