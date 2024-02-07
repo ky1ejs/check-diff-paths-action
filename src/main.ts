@@ -38,7 +38,7 @@ export async function run(): Promise<void> {
   }
 }
 
-function runWithMapInput(input: Map<string, RegExp>, files: string[]) {
+function runWithMapInput(input: Map<string, RegExp>, files: string[]): void {
   const changedFiles = new Map<string, boolean>()
   for (const [key, value] of input) {
     changedFiles.set(
@@ -54,7 +54,7 @@ function runWithMapInput(input: Map<string, RegExp>, files: string[]) {
   }
 }
 
-function runWithArrayInput(input: RegExp[], files: string[]) {
+function runWithArrayInput(input: RegExp[], files: string[]): void {
   const pathsChanged = files.some(f => input.some(r => r.test(f)))
 
   core.info(`Evaluating ${files.length} changed file(s).`)
@@ -66,12 +66,13 @@ function runWithArrayInput(input: RegExp[], files: string[]) {
 export function parseInpuit(input: string): RegExp[] | Map<string, RegExp> {
   try {
     const json = JSON.parse(input)
-    return parseMapInput(input)
+    return parseMapInput(json)
   } catch {
     return parseArrayInput(input)
   }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function parseMapInput(json: any): Map<string, RegExp> {
   const map: Map<string, RegExp> = new Map()
   for (const key in json) {
