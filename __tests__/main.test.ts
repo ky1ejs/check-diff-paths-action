@@ -43,6 +43,8 @@ describe('action', () => {
         login: 'some-owner'
       }
     }
+    github.context.payload.before = 'abcd1234567890123456789012345678901234567'
+    github.context.payload.after = '1234567890123456789012345678901234567890'
 
     const oktokit = github.getOctokit('some-token')
     jest.spyOn(oktokit, 'paginate').mockImplementation(async () => {
@@ -104,5 +106,73 @@ describe('action', () => {
 
     // Verify that all of the core library functions were called correctly
     expect(setOutputMock).toHaveBeenCalledWith('has-changes', false)
+  })
+
+  it('uses compare API for push events with before/after SHAs', async () => {
+    // Clear PR context to simulate push event
+    github.context.payload.pull_request = undefined
+
+    const mockOctokit = github.getOctokit('some-token')
+    const paginateSpy = jest.spyOn(mockOctokit, 'paginate')
+
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'paths':
+          return 'folder-1/*'
+        case 'github-token':
+          return 'some-token'
+        default:
+          return ''
+      }
+    })
+
+    await main.run()
+
+    // Verify compare API was called with before/after SHAs
+    expect(paginateSpy).toHaveBeenCalledWith(
+      mockOctokit.rest.repos.compareCommits,
+      {
+        owner: 'some-owner',
+        repo: 'some-repo',
+        base: 'abcd1234567890123456789012345678901234567',
+        head: '1234567890123456789012345678901234567890',
+        per_page: 100
+      },
+      expect.any(Function)
+    )
+  })
+
+  it('falls back to single commit API when before SHA is null', async () => {
+    // Clear PR context and set before SHA to null (new branch scenario)
+    github.context.payload.pull_request = undefined
+    github.context.payload.before = '0000000000000000000000000000000000000000'
+
+    const mockOctokit = github.getOctokit('some-token')
+    const paginateSpy = jest.spyOn(mockOctokit, 'paginate')
+
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'paths':
+          return 'folder-1/*'
+        case 'github-token':
+          return 'some-token'
+        default:
+          return ''
+      }
+    })
+
+    await main.run()
+
+    // Verify single commit API was called instead of compare
+    expect(paginateSpy).toHaveBeenCalledWith(
+      mockOctokit.rest.repos.getCommit,
+      {
+        owner: 'some-owner',
+        repo: 'some-repo',
+        ref: 'refs/heads/some-ref',
+        per_page: 100
+      },
+      expect.any(Function)
+    )
   })
 })

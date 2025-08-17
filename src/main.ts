@@ -29,7 +29,18 @@ export async function run(): Promise<void> {
   if (prNumber) {
     files = await getPullRequestFiles(octokit, repo, prNumber)
   } else {
-    files = await getCommitFileNames(octokit, repo, context.ref)
+    const beforeSha = context.payload.before
+    const afterSha = context.payload.after
+
+    if (
+      beforeSha &&
+      afterSha &&
+      beforeSha !== '0000000000000000000000000000000000000000'
+    ) {
+      files = await getCompareFiles(octokit, repo, beforeSha, afterSha)
+    } else {
+      files = await getCommitFileNames(octokit, repo, context.ref)
+    }
   }
 
   if (parsedInput instanceof Map) {
@@ -109,6 +120,25 @@ async function getCommitFileNames(
       owner: repo.owner.login,
       repo: repo.name,
       ref,
+      per_page: 100
+    },
+    response => response.data.files?.map(f => f.filename) ?? []
+  )
+}
+
+async function getCompareFiles(
+  oktokit: InstanceType<typeof GitHub>,
+  repo: PayloadRepository,
+  base: string,
+  head: string
+): Promise<string[]> {
+  return await oktokit.paginate(
+    oktokit.rest.repos.compareCommits,
+    {
+      owner: repo.owner.login,
+      repo: repo.name,
+      base,
+      head,
       per_page: 100
     },
     response => response.data.files?.map(f => f.filename) ?? []

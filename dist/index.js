@@ -28964,7 +28964,16 @@ async function run() {
         files = await getPullRequestFiles(octokit, repo, prNumber);
     }
     else {
-        files = await getCommitFileNames(octokit, repo, context.ref);
+        const beforeSha = context.payload.before;
+        const afterSha = context.payload.after;
+        if (beforeSha &&
+            afterSha &&
+            beforeSha !== '0000000000000000000000000000000000000000') {
+            files = await getCompareFiles(octokit, repo, beforeSha, afterSha);
+        }
+        else {
+            files = await getCommitFileNames(octokit, repo, context.ref);
+        }
     }
     if (parsedInput instanceof Map) {
         core.info('Using map input');
@@ -29030,6 +29039,15 @@ async function getCommitFileNames(oktokit, repo, ref) {
         owner: repo.owner.login,
         repo: repo.name,
         ref,
+        per_page: 100
+    }, response => response.data.files?.map(f => f.filename) ?? []);
+}
+async function getCompareFiles(oktokit, repo, base, head) {
+    return await oktokit.paginate(oktokit.rest.repos.compareCommits, {
+        owner: repo.owner.login,
+        repo: repo.name,
+        base,
+        head,
         per_page: 100
     }, response => response.data.files?.map(f => f.filename) ?? []);
 }
